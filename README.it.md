@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌌 Folder Galaxy
+# Folder Galaxy
 
 **Una costellazione 3D, in tempo reale, delle tue cartelle e dei tuoi file.**
 Ogni progetto diventa una galassia, ogni cartella un ramo, ogni file una stella, e tutto si aggiorna mentre lavori.
@@ -11,7 +11,7 @@ Ogni progetto diventa una galassia, ogni cartella un ramo, ogni file una stella,
 ![Docker](https://img.shields.io/badge/docker-amd64%20%7C%20arm64%20%7C%20armv7-2496ed?logo=docker&logoColor=white)
 [![Licenza: MIT](https://img.shields.io/badge/licenza-MIT-yellow)](LICENSE)
 
-[Avvio rapido](#-avvio-rapido) · [Installazione per dispositivo](#%EF%B8%8F-installazione-sul-tuo-dispositivo) · [Impostazioni](#%EF%B8%8F-impostazioni) · [Domande frequenti](#-domande-frequenti) · [🇬🇧 English](README.md)
+[Avvio rapido](#avvio-rapido) · [Installazione per dispositivo](#installazione-sul-tuo-dispositivo) · [Impostazioni](#impostazioni) · [Domande frequenti](#domande-frequenti) · [English](README.md)
 
 <img src="docs/images/demo.gif" alt="Folder Galaxy: i file nuovi compaiono con un lampo bianco, quelli cancellati lampeggiano di rosso, il pannello attività si aggiorna dal vivo" width="900">
 
@@ -19,7 +19,7 @@ Ogni progetto diventa una galassia, ogni cartella un ramo, ogni file una stella,
 
 ---
 
-## ✨ Cos'è
+## Cos'è
 
 Folder Galaxy è una piccola web app che trasforma una cartella (i tuoi progetti, la tua home, un singolo repository) in una mappa 3D interattiva da aprire nel browser.
 
@@ -27,37 +27,37 @@ Folder Galaxy è una piccola web app che trasforma una cartella (i tuoi progetti
 
 È **un solo file Python, senza dipendenze**, quindi parte in pochi secondi anche su Mac, PC Windows o Raspberry Pi.
 
-## 🚀 Caratteristiche
+## Caratteristiche
 
 **Dal vivo**
-- 🔴 **Aggiornamenti in tempo reale.** File creati, modificati o cancellati compaiono in pochi secondi, inviati alla pagina con Server-Sent Events. Viaggiano solo le differenze.
-- ⚡ **Pannello attività.** Le ultime creazioni, modifiche e cancellazioni sono in un elenco: clic per volarci sopra.
-- 🌡️ **Mappa di calore.** I file modificati da poco sono più luminosi, quelli fermi da mesi si spengono.
+- **Aggiornamenti in tempo reale.** File creati, modificati o cancellati compaiono in pochi secondi, inviati alla pagina con Server-Sent Events. Viaggiano solo le differenze.
+- **Pannello attività.** Le ultime creazioni, modifiche e cancellazioni sono in un elenco: clic per volarci sopra.
+- **Mappa di calore.** I file modificati da poco sono più luminosi, quelli fermi da mesi si spengono.
 
 **Visuale**
-- 🌌 **Layout a galassie.** Ogni cartella di primo livello è una galassia, e al suo interno l'albero cresce verso l'esterno come un ramo: i file della stessa cartella restano insieme.
-- 🎨 **Colori con un significato.** Le cartelle prendono il colore della loro galassia, i file quello del tipo (Python, JS/TS, web, altro codice, config, documenti, dati, log, media).
-- 📏 **Dimensioni con un significato.** Per le cartelle conta quanti file contengono, per i file quanto pesano.
-- 📌 **Disposizione stabile.** La stessa cartella produce sempre la stessa costellazione, così impari dove sta ogni cosa.
+- **Layout a galassie.** Ogni cartella di primo livello è una galassia, e al suo interno l'albero cresce verso l'esterno come un ramo: i file della stessa cartella restano insieme.
+- **Colori con un significato.** Le cartelle prendono il colore della loro galassia, i file quello del tipo (Python, JS/TS, web, altro codice, config, documenti, dati, log, media).
+- **Dimensioni con un significato.** Per le cartelle conta quanti file contengono, per i file quanto pesano.
+- **Disposizione stabile.** La stessa cartella produce sempre la stessa costellazione, così impari dove sta ogni cosa.
 
 **Navigazione**
-- 🧭 **Scegli qualsiasi cartella** dalla pagina: barra del percorso con suggerimenti, ↑ per salire, percorso cliccabile, **Entra ›** per entrare in una cartella, e i tasti avanti/indietro del browser. Ogni vista ha il suo indirizzo, quindi la puoi salvare nei preferiti.
-- 🔍 **Ricerca** per nome (`/` per iniziare, `Invio` per volare sul primo risultato).
-- 📂 **Clic per aprire o chiudere** una cartella. Quelle con più di 120 elementi partono chiuse.
-- 🛰️ **Telecamera che vola** sugli elementi, rotazione automatica, etichette per tutte le cartelle e "inquadra tutto" con un clic.
+- **Scegli qualsiasi cartella** dalla pagina: barra del percorso con suggerimenti, ↑ per salire, percorso cliccabile, **Entra ›** per entrare in una cartella, e i tasti avanti/indietro del browser. Ogni vista ha il suo indirizzo, quindi la puoi salvare nei preferiti.
+- **Ricerca** per nome (`/` per iniziare, `Invio` per volare sul primo risultato).
+- **Clic per aprire o chiudere** una cartella. Quelle con più di 120 elementi partono chiuse.
+- **Telecamera che vola** sugli elementi, rotazione automatica, etichette per tutte le cartelle e "inquadra tutto" con un clic.
 
 **Sicura per costruzione**
-- 🔒 **Sola lettura.** Legge solo nomi, dimensioni e date, mai il contenuto dei file, e non scrive mai nulla.
-- 🧱 **Recinto.** La pagina non può uscire dalla cartella consentita (`BROWSE_ROOT`). I collegamenti simbolici vengono risolti prima del controllo e mai seguiti durante la scansione.
-- 🏠 **Privata di default.** Avviata a mano, ascolta solo su `127.0.0.1`. Decidi tu quando aprirla alla rete.
+- **Sola lettura.** Legge solo nomi, dimensioni e date, mai il contenuto dei file, e non scrive mai nulla.
+- **Recinto.** La pagina non può uscire dalla cartella consentita (`BROWSE_ROOT`). I collegamenti simbolici vengono risolti prima del controllo e mai seguiti durante la scansione.
+- **Privata di default.** Avviata a mano, ascolta solo su `127.0.0.1`. Decidi tu quando aprirla alla rete.
 
 **Funziona ovunque**
-- 🐍 **Zero dipendenze.** Solo libreria standard di Python. Il motore 3D è incluso, quindi la pagina funziona anche senza internet.
-- 🐳 **Immagine Docker** per `amd64`, `arm64` e `armv7` (PC, Mac con Apple silicon, Raspberry Pi, NAS).
-- 💻 Linux, macOS e Windows, nel browser da computer e da telefono, in italiano e inglese (scelti in automatico).
-- 🪶 **Leggera.** Una cartella viene sorvegliata solo mentre una pagina la mostra, e quelle enormi vengono controllate meno spesso.
+- **Zero dipendenze.** Solo libreria standard di Python. Il motore 3D è incluso, quindi la pagina funziona anche senza internet.
+- **Immagine Docker** per `amd64`, `arm64` e `armv7` (PC, Mac con Apple silicon, Raspberry Pi, NAS).
+- Linux, macOS e Windows, nel browser da computer e da telefono, in italiano e inglese (scelti in automatico).
+- **Leggera.** Una cartella viene sorvegliata solo mentre una pagina la mostra, e quelle enormi vengono controllate meno spesso.
 
-## 📸 Immagini
+## Immagini
 
 | Panoramica | Una galassia da vicino, con etichette |
 |---|---|
@@ -74,7 +74,7 @@ Folder Galaxy è una piccola web app che trasforma una cartella (i tuoi progetti
 
 ---
 
-## ⚡ Avvio rapido
+## Avvio rapido
 
 Serve **Python 3.9+** (già presente su quasi tutti i Linux e Mac) oppure **Docker**.
 
@@ -111,10 +111,10 @@ docker run -d --name folder-galaxy --restart unless-stopped -p 8765:8765 \
 
 ---
 
-## 🖥️ Installazione sul tuo dispositivo
+## Installazione sul tuo dispositivo
 
 <details open>
-<summary><b>🐧 Server Linux senza schermo / homelab (Docker)</b>, l'uso per cui è nata</summary>
+<summary><b>Server Linux senza schermo / homelab (Docker)</b>, l'uso per cui è nata</summary>
 
 1. Copia il progetto sul server, con `git clone` oppure copiando la cartella via SSH:
    ```bash
@@ -141,7 +141,7 @@ La cartella è montata **in sola lettura** con lo stesso percorso, così nella p
 </details>
 
 <details>
-<summary><b>🐧 Server Linux senza Docker (systemd)</b></summary>
+<summary><b>Server Linux senza Docker (systemd)</b></summary>
 
 ```bash
 git clone https://github.com/tobiagola-hue/folder-galaxy.git ~/folder-galaxy
@@ -156,7 +156,7 @@ Il servizio avvia `server.py ... --host 0.0.0.0`, quindi si apre anche dagli alt
 </details>
 
 <details>
-<summary><b>🍎 macOS</b></summary>
+<summary><b>macOS</b></summary>
 
 ```bash
 git clone https://github.com/tobiagola-hue/folder-galaxy.git
@@ -170,7 +170,7 @@ python3 server.py ~/Developer --open
 </details>
 
 <details>
-<summary><b>🪟 Windows</b></summary>
+<summary><b>Windows</b></summary>
 
 Installa Python da [python.org](https://www.python.org/downloads/) (spunta *"Add python.exe to PATH"*) o dal Microsoft Store, poi in PowerShell:
 
@@ -184,7 +184,7 @@ I percorsi si possono scrivere sia `C:\Users\io\projects` sia `C:/Users/io/proje
 </details>
 
 <details>
-<summary><b>🍓 Raspberry Pi</b></summary>
+<summary><b>Raspberry Pi</b></summary>
 
 Raspberry Pi OS ha già Python 3:
 
@@ -198,7 +198,7 @@ Oppure usa Docker (l'immagine supporta `arm64` e `armv7`). Per farlo partire all
 </details>
 
 <details>
-<summary><b>🗄️ NAS (Synology, Unraid, TrueNAS, …)</b></summary>
+<summary><b>NAS (Synology, Unraid, TrueNAS, …)</b></summary>
 
 Usa **Container Manager / Docker Compose** con il `docker-compose.yml` incluso, oppure con questo minimo:
 
@@ -216,7 +216,7 @@ services:
 </details>
 
 <details>
-<summary><b>📱 Aprirla dal telefono o da fuori casa</b></summary>
+<summary><b>Aprirla dal telefono o da fuori casa</b></summary>
 
 - **Stessa Wi-Fi:** avvia con `--host 0.0.0.0` (Docker lo fa già) e apri `http://<ip-del-computer>:8765`.
 - **Da ovunque:** usa una rete privata come [Tailscale](https://tailscale.com/) o WireGuard e apri `http://<ip-tailscale>:8765`. **Non** esporre la porta direttamente su internet: per scelta non c'è login.
@@ -225,7 +225,7 @@ services:
 
 ---
 
-## 🕹️ Uso della pagina
+## Uso della pagina
 
 | Azione | Mouse / tastiera | Touch |
 |---|---|---|
@@ -256,7 +256,7 @@ services:
 
 ---
 
-## ⚙️ Impostazioni
+## Impostazioni
 
 Ogni impostazione si può passare come opzione da riga di comando o come variabile d'ambiente (Docker le legge da `.env`).
 
@@ -278,7 +278,7 @@ Puoi anche forzare la lingua aggiungendo `?lang=it` o `?lang=en` all'indirizzo.
 
 ---
 
-## 🔒 Sicurezza e privacy
+## Sicurezza e privacy
 
 - **Sola lettura, solo metadati.** Vengono letti solo nomi, dimensioni e date di modifica. Il contenuto dei file non viene mai aperto.
 - **Recinto.** Ogni percorso richiesto viene risolto (`realpath`, quindi `..` e collegamenti simbolici sono gestiti) e rifiutato se è fuori da `BROWSE_ROOT`. Le cartelle collegate simbolicamente si vedono ma non si entra mai.
@@ -286,14 +286,14 @@ Puoi anche forzare la lingua aggiungendo `?lang=it` o `?lang=en` all'indirizzo.
 - **Niente login.** Chi raggiunge la porta può vedere i nomi dentro `BROWSE_ROOT`. Tienila su `127.0.0.1`, in rete locale o in una VPN come Tailscale, e non aprirla su internet.
 - **Niente telemetria, nessuna richiesta esterna.** Il motore 3D è incluso.
 
-## 📈 Prestazioni
+## Prestazioni
 
 - Una scansione di ~2.000 elementi richiede pochi millisecondi; ~30.000 elementi circa 0,2 s su una CPU moderna (comunque ben sotto il secondo su un piccolo mini PC).
 - Se una scansione diventa lenta, l'intervallo si allunga da solo (a 5 volte il tempo di scansione), così le cartelle enormi non occupano la CPU.
 - Una cartella viene sorvegliata solo finché almeno una pagina la mostra. Un minuto dopo la chiusura dell'ultima, il controllo si ferma.
 - Nel browser, qualche migliaio di nodi visibili scorre fluido su portatili e telefoni recenti. Per alberi giganti usa **Comprimi**, `EXCLUDE_EXTRA` o `MAX_NODES`.
 
-## 🔌 API
+## API
 
 Utile se vuoi costruirci sopra. Tutte le chiamate sono `GET`:
 
@@ -307,7 +307,7 @@ Utile se vuoi costruirci sopra. Tutte le chiamate sono `GET`:
 
 Ogni nodo è `{id, p, n, t, s, m, f, e}`: percorso relativo, id del genitore, nome, tipo (`d`/`f`), byte, data di modifica, numero di file (per le cartelle) e flag di non leggibile.
 
-## 🛠️ Sviluppo
+## Sviluppo
 
 ```
 folder-galaxy/
@@ -330,7 +330,7 @@ Segnalazioni e pull request sono benvenute. Qualche idea: temi, un "time-lapse" 
 
 ---
 
-## ❓ Domande frequenti
+## Domande frequenti
 
 <details>
 <summary><b>Perché due cartelle dello stesso progetto non sono vicine?</b></summary>
@@ -369,11 +369,11 @@ Sì, se la cartella è montata e leggibile. I dischi di rete sono più lenti da 
 
 ---
 
-## 🙏 Riconoscimenti
+## Riconoscimenti
 
 - Rendering 3D con [3d-force-graph](https://github.com/vasturiano/3d-force-graph) (MIT) di Vasco Asturiano, basato su [three.js](https://threejs.org/) e [d3-force-3d](https://github.com/vasturiano/d3-force-3d). Vedi [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-- Costruito con ❤️ e tanto aiuto da [Claude](https://claude.ai).
+- Costruito con tanto aiuto da [Claude](https://claude.ai).
 
-## 📄 Licenza
+## Licenza
 
-[MIT](LICENSE). Fanne quello che vuoi, una ⭐ fa sempre piacere!
+[MIT](LICENSE). Fanne quello che vuoi, una stella fa sempre piacere.

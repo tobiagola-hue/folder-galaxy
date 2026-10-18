@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌌 Folder Galaxy
+# Folder Galaxy
 
 **A live 3D constellation of your folders and files.**
 Every project becomes a galaxy, every folder a branch, every file a star, and it all updates in real time while you work.
@@ -11,7 +11,7 @@ Every project becomes a galaxy, every folder a branch, every file a star, and it
 ![Docker](https://img.shields.io/badge/docker-amd64%20%7C%20arm64%20%7C%20armv7-2496ed?logo=docker&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 
-[Quick start](#-quick-start) · [Install on your device](#%EF%B8%8F-install-on-your-device) · [Configuration](#%EF%B8%8F-configuration) · [FAQ](#-faq--troubleshooting) · [🇮🇹 Italiano](README.it.md)
+[Quick start](#quick-start) · [Install on your device](#install-on-your-device) · [Configuration](#configuration) · [FAQ](#faq--troubleshooting) · [Italiano](README.it.md)
 
 <img src="docs/images/demo.gif" alt="Folder Galaxy: files appear with a white flash, deleted files flash red, the activity panel updates live" width="900">
 
@@ -19,7 +19,7 @@ Every project becomes a galaxy, every folder a branch, every file a star, and it
 
 ---
 
-## ✨ What it is
+## What it is
 
 Folder Galaxy is a tiny web app that turns a folder (your projects, your home, a single repo) into an interactive 3D map you open in the browser.
 
@@ -27,37 +27,37 @@ It was built for a **headless home server**: the server watches the folder, and 
 
 It's **one Python file with no dependencies**, so it also runs on your Mac, Windows PC or Raspberry Pi in a few seconds.
 
-## 🚀 Features
+## Features
 
 **Live**
-- 🔴 **Real-time updates.** Files created, modified or deleted appear within seconds, streamed to the page with Server-Sent Events. Only the differences are sent.
-- ⚡ **Activity feed.** The latest creations, changes and deletions are listed in a panel; click one to fly to it.
-- 🌡️ **Heat map.** Recently modified files glow brighter, while files untouched for months fade out.
+- **Real-time updates.** Files created, modified or deleted appear within seconds, streamed to the page with Server-Sent Events. Only the differences are sent.
+- **Activity feed.** The latest creations, changes and deletions are listed in a panel; click one to fly to it.
+- **Heat map.** Recently modified files glow brighter, while files untouched for months fade out.
 
 **Visual**
-- 🌌 **Galaxy layout.** Each top-level folder is its own galaxy, and inside it the tree grows outward like branches, so siblings stay together.
-- 🎨 **Meaningful colours.** Folders take their galaxy's colour, and files are coloured by type (Python, JS/TS, web, other code, config, docs, data, logs, media).
-- 📏 **Meaningful sizes.** A folder's size reflects how many files it holds, and a file's size reflects its weight.
-- 📌 **Stable layout.** The same folder always produces the same constellation, so you learn where things are.
+- **Galaxy layout.** Each top-level folder is its own galaxy, and inside it the tree grows outward like branches, so siblings stay together.
+- **Meaningful colours.** Folders take their galaxy's colour, and files are coloured by type (Python, JS/TS, web, other code, config, docs, data, logs, media).
+- **Meaningful sizes.** A folder's size reflects how many files it holds, and a file's size reflects its weight.
+- **Stable layout.** The same folder always produces the same constellation, so you learn where things are.
 
 **Navigation**
-- 🧭 **Pick any folder** from the page: a path bar with sub-folder suggestions, ↑ to go up, clickable breadcrumbs, **Enter ›** to dive into a folder, and browser back/forward. Every view has its own URL, so you can bookmark it.
-- 🔍 **Search** by name (`/` to focus, `Enter` to fly to the first match).
-- 📂 **Click to expand or collapse** any folder. Folders with more than 120 items start collapsed.
-- 🛰️ **Fly-to camera**, auto-rotate, labels for every folder, and one-click "fit everything".
+- **Pick any folder** from the page: a path bar with sub-folder suggestions, ↑ to go up, clickable breadcrumbs, **Enter ›** to dive into a folder, and browser back/forward. Every view has its own URL, so you can bookmark it.
+- **Search** by name (`/` to focus, `Enter` to fly to the first match).
+- **Click to expand or collapse** any folder. Folders with more than 120 items start collapsed.
+- **Fly-to camera**, auto-rotate, labels for every folder, and one-click "fit everything".
 
 **Safe by design**
-- 🔒 **Read-only.** It only reads names, sizes and dates, never file contents, and never writes anything.
-- 🧱 **Sandboxed browsing.** The page can't leave the folder you allow (`BROWSE_ROOT`). Symlinks are resolved before checking and never followed while scanning.
-- 🏠 **Private by default.** Run directly, it only listens on `127.0.0.1`. You choose when to open it to your network.
+- **Read-only.** It only reads names, sizes and dates, never file contents, and never writes anything.
+- **Sandboxed browsing.** The page can't leave the folder you allow (`BROWSE_ROOT`). Symlinks are resolved before checking and never followed while scanning.
+- **Private by default.** Run directly, it only listens on `127.0.0.1`. You choose when to open it to your network.
 
 **Runs anywhere**
-- 🐍 **Zero dependencies.** Python standard library only. The 3D engine is bundled, so the page works offline too.
-- 🐳 **Docker image** for `amd64`, `arm64` and `armv7` (PCs, Apple-silicon Macs, Raspberry Pi, NAS).
-- 💻 Linux, macOS and Windows, on desktop and mobile browsers, in English and Italian (picked automatically).
-- 🪶 **Light.** Folders are only watched while a page is open, and huge folders are checked less often.
+- **Zero dependencies.** Python standard library only. The 3D engine is bundled, so the page works offline too.
+- **Docker image** for `amd64`, `arm64` and `armv7` (PCs, Apple-silicon Macs, Raspberry Pi, NAS).
+- Linux, macOS and Windows, on desktop and mobile browsers, in English and Italian (picked automatically).
+- **Light.** Folders are only watched while a page is open, and huge folders are checked less often.
 
-## 📸 Screenshots
+## Screenshots
 
 | Overview | A galaxy up close, with labels |
 |---|---|
@@ -74,7 +74,7 @@ It's **one Python file with no dependencies**, so it also runs on your Mac, Wind
 
 ---
 
-## ⚡ Quick start
+## Quick start
 
 You need **Python 3.9+** (already installed on most Linux and macOS systems) or **Docker**.
 
@@ -111,10 +111,10 @@ docker run -d --name folder-galaxy --restart unless-stopped -p 8765:8765 \
 
 ---
 
-## 🖥️ Install on your device
+## Install on your device
 
 <details open>
-<summary><b>🐧 Headless Linux server / homelab (Docker)</b>, the setup it was built for</summary>
+<summary><b>Headless Linux server / homelab (Docker)</b>, the setup it was built for</summary>
 
 1. Copy the project to the server, with `git clone` or by copying the folder over SSH:
    ```bash
@@ -141,7 +141,7 @@ The folder is mounted **read-only** at the same path, so the page shows real pat
 </details>
 
 <details>
-<summary><b>🐧 Linux server without Docker (systemd)</b></summary>
+<summary><b>Linux server without Docker (systemd)</b></summary>
 
 ```bash
 git clone https://github.com/tobiagola-hue/folder-galaxy.git ~/folder-galaxy
@@ -156,7 +156,7 @@ The service runs `server.py ... --host 0.0.0.0`, so it can be opened from other 
 </details>
 
 <details>
-<summary><b>🍎 macOS</b></summary>
+<summary><b>macOS</b></summary>
 
 ```bash
 git clone https://github.com/tobiagola-hue/folder-galaxy.git
@@ -170,7 +170,7 @@ python3 server.py ~/Developer --open
 </details>
 
 <details>
-<summary><b>🪟 Windows</b></summary>
+<summary><b>Windows</b></summary>
 
 Install Python from [python.org](https://www.python.org/downloads/) (tick *"Add python.exe to PATH"*) or from the Microsoft Store, then in PowerShell:
 
@@ -184,7 +184,7 @@ You can type paths as `C:\Users\me\projects` or `C:/Users/me/projects`. `AppData
 </details>
 
 <details>
-<summary><b>🍓 Raspberry Pi</b></summary>
+<summary><b>Raspberry Pi</b></summary>
 
 Raspberry Pi OS already ships Python 3:
 
@@ -198,7 +198,7 @@ Or use Docker (the image supports `arm64` and `armv7`). To start it at boot with
 </details>
 
 <details>
-<summary><b>🗄️ NAS (Synology, Unraid, TrueNAS, …)</b></summary>
+<summary><b>NAS (Synology, Unraid, TrueNAS, …)</b></summary>
 
 Use **Container Manager / Docker Compose** with the included `docker-compose.yml`, or with this minimal one:
 
@@ -216,7 +216,7 @@ services:
 </details>
 
 <details>
-<summary><b>📱 Opening it from your phone or from outside home</b></summary>
+<summary><b>Opening it from your phone or from outside home</b></summary>
 
 - **Same Wi-Fi:** start it with `--host 0.0.0.0` (Docker already does this) and open `http://<computer-ip>:8765`.
 - **From anywhere:** use a private network such as [Tailscale](https://tailscale.com/) or WireGuard and open `http://<tailscale-ip>:8765`. **Don't** expose the port directly to the internet: there is no login, by design.
@@ -225,7 +225,7 @@ services:
 
 ---
 
-## 🕹️ Using the page
+## Using the page
 
 | Action | Mouse / keyboard | Touch |
 |---|---|---|
@@ -256,7 +256,7 @@ services:
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 Every setting can be passed as a command-line option or as an environment variable (Docker reads them from `.env`).
 
@@ -278,7 +278,7 @@ You can also force the language with `?lang=en` or `?lang=it` in the URL.
 
 ---
 
-## 🔒 Security & privacy
+## Security & privacy
 
 - **Read-only, metadata only.** Only file names, sizes and modification times are read. File contents are never opened.
 - **Sandboxed.** Every requested path is resolved (`realpath`, so `..` and symlinks are handled) and refused if it's outside `BROWSE_ROOT`. Symlinked folders are shown but never entered.
@@ -286,14 +286,14 @@ You can also force the language with `?lang=en` or `?lang=it` in the URL.
 - **No login.** Anyone who can reach the port can browse the names inside `BROWSE_ROOT`. Keep it on `127.0.0.1`, your LAN or a VPN like Tailscale, and don't port-forward it to the internet.
 - **No telemetry, no external requests.** The 3D engine is bundled locally.
 
-## 📈 Performance
+## Performance
 
 - A scan of ~2,000 items takes a few milliseconds; ~30,000 items take about 0.2 s on a modern CPU (still well under a second on a small mini PC).
 - When a scan gets slow, the interval stretches automatically (to 5× the scan time), so big folders never hog the CPU.
 - Folders are only watched while at least one page shows them, and watching stops a minute after the last page closes.
 - In the browser, a few thousand visible nodes run smoothly on laptops and recent phones. Use **Collapse**, `EXCLUDE_EXTRA` or `MAX_NODES` for giant trees.
 
-## 🔌 API
+## API
 
 Handy if you want to build on top of it. All endpoints are `GET`:
 
@@ -307,7 +307,7 @@ Handy if you want to build on top of it. All endpoints are `GET`:
 
 Each node is `{id, p, n, t, s, m, f, e}`: the relative path, parent id, name, type (`d`/`f`), size in bytes, mtime, file count (folders), and unreadable flag.
 
-## 🛠️ Development
+## Development
 
 ```
 folder-galaxy/
@@ -330,7 +330,7 @@ Issues and pull requests are welcome. Some ideas: themes, a "time-lapse" of the 
 
 ---
 
-## ❓ FAQ & troubleshooting
+## FAQ & troubleshooting
 
 <details>
 <summary><b>Why aren't two folders of the same project next to each other?</b></summary>
@@ -369,11 +369,11 @@ Yes, as long as the folder is mounted and readable. Network drives are slower to
 
 ---
 
-## 🙏 Credits
+## Credits
 
 - 3D rendering by [3d-force-graph](https://github.com/vasturiano/3d-force-graph) (MIT) by Vasco Asturiano, built on [three.js](https://threejs.org/) and [d3-force-3d](https://github.com/vasturiano/d3-force-3d). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-- Built with ❤️ and a lot of help from [Claude](https://claude.ai).
+- Built with a lot of help from [Claude](https://claude.ai).
 
-## 📄 License
+## License
 
-[MIT](LICENSE). Do what you like, a ⭐ is always appreciated!
+[MIT](LICENSE). Do what you like, a star is always appreciated.
