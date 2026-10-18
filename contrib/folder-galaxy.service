@@ -1,0 +1,19 @@
+# Folder Galaxy as a systemd service (Linux, without Docker).
+#
+# 1. Replace YOURUSER and the paths below.
+# 2. sudo cp contrib/folder-galaxy.service /etc/systemd/system/
+# 3. sudo systemctl daemon-reload && sudo systemctl enable --now folder-galaxy
+# 4. Logs: journalctl -u folder-galaxy -f
+[Unit]
+Description=Folder Galaxy - live 3D map of your folders
+After=network-online.target
+
+[Service]
+User=YOURUSER
+ExecStart=/usr/bin/python3 /home/YOURUSER/folder-galaxy/server.py /home/YOURUSER/projects --host 0.0.0.0
+Restart=always
+RestartSec=5
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

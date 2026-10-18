@@ -1,0 +1,22 @@
+# Folder Galaxy - settings live in a .env file next to this one (see .env.example).
+# Without a .env file it shows your home folder.
+services:
+  folder-galaxy:
+    build: .
+    # Or skip the build and use the prebuilt multi-arch image:
+    # image: ghcr.io/tobiagola-hue/folder-galaxy:latest
+    container_name: folder-galaxy
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8765}:8765"
+    volumes:
+      # mounted READ-ONLY (:ro) and at the same path, so the page shows real paths
+      - ${BROWSE_ROOT:-${HOME}}:${BROWSE_ROOT:-${HOME}}:ro
+    environment:
+      BROWSE_ROOT: ${BROWSE_ROOT:-${HOME}}
+      DEFAULT_ROOT: ${DEFAULT_ROOT:-${BROWSE_ROOT:-${HOME}}}
+      HOME: ${BROWSE_ROOT:-${HOME}}          # makes "~/..." work in the path bar
+      SCAN_INTERVAL: ${SCAN_INTERVAL:-3}
+      MAX_NODES: ${MAX_NODES:-30000}
+      EXCLUDE_EXTRA: ${EXCLUDE_EXTRA:-}
+    mem_limit: 384m

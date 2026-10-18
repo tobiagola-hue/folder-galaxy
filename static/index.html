@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Folder Galaxy - a live 3D constellation of your folders and files">
+<meta name="theme-color" content="#05060d">
+<title>Folder Galaxy</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='5' fill='%23fff3bf'/%3E%3Ccircle cx='6' cy='8' r='3' fill='%234dabf7'/%3E%3Ccircle cx='26' cy='9' r='3' fill='%23ff6b6b'/%3E%3Ccircle cx='24' cy='26' r='3' fill='%2369db7c'/%3E%3Ccircle cx='7' cy='24' r='2' fill='%23da77f2'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #05060d;
+    --panel: rgba(14, 17, 30, 0.78);
+    --panel-border: rgba(140, 160, 220, 0.16);
+    --text: #e7eaf3;
+    --muted: #8a93ab;
+    --accent: #ffe08a;
+    --live: #51cf66;
+    --down: #ff6b6b;
+    --radius: 12px;
+    --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font: 13px/1.45 var(--font); }
+  body {
+    background:
+      radial-gradient(1px 1px at 12% 18%, #ffffff55, transparent),
+      radial-gradient(1px 1px at 72% 34%, #ffffff40, transparent),
+      radial-gradient(1px 1px at 38% 82%, #ffffff40, transparent),
+      radial-gradient(1px 1px at 88% 76%, #ffffff55, transparent),
+      radial-gradient(1.5px 1.5px at 55% 8%, #ffffff50, transparent),
+      radial-gradient(1px 1px at 22% 58%, #ffffff35, transparent),
+      radial-gradient(ellipse at 50% 45%, #0d1230 0%, var(--bg) 70%);
+  }
+  #graph { position: fixed; inset: 0; }
+  #labels { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .lbl {
+    position: absolute; left: 0; top: 0; white-space: nowrap; transform: translate(-50%, -100%);
+    font-size: 11px; color: #dfe4f2; text-shadow: 0 0 4px #000, 0 0 2px #000; will-change: transform;
+  }
+  .lbl.root { font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: .04em; }
+  .lbl.proj { font-size: 13px; font-weight: 650; }
+  .lbl.proj small { font-weight: 400; color: var(--muted); margin-left: 4px; }
+  .lbl.hit { color: #fff; background: rgba(255, 224, 138, .18); padding: 0 4px; border-radius: 4px; }
+  .lbl.sel { color: #fff; font-weight: 600; background: rgba(255,255,255,.12); padding: 1px 6px; border-radius: 5px; }
+
+  .panel {
+    position: fixed; background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: var(--radius); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 30px rgba(0,0,0,.35);
+  }
+  #hud { top: 14px; left: 14px; width: 300px; max-height: calc(100vh - 28px); overflow: auto; padding: 12px 14px; }
+  #hud h1 { margin: 0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  #hud h1 .dot-root { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  #hudToggle { display: none; background: none; border: 0; color: var(--muted); font-size: 16px; cursor: pointer; padding: 0 2px; }
+  #live { margin-left: auto; font-size: 11px; font-weight: 500; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  #live i { width: 8px; height: 8px; border-radius: 50%; background: var(--down); }
+  #live.on i { background: var(--live); box-shadow: 0 0 8px var(--live); animation: pulse 2s infinite; }
+  @keyframes pulse { 50% { opacity: .45; } }
+  #pathForm { display: flex; gap: 6px; margin-top: 10px; }
+  #pathInput {
+    flex: 1; min-width: 0; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--panel-border);
+    background: rgba(0,0,0,.35); color: var(--text); font: 12px var(--mono); outline: none;
+  }
+  #pathInput:focus { border-color: rgba(255,224,138,.5); }
+  #pathForm .btn { padding: 5px 9px; }
+  #crumbs { margin-top: 6px; font: 11.5px var(--mono); color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px; }
+  #crumbs button { all: unset; cursor: pointer; color: #b9c2dc; padding: 0 2px; border-radius: 4px; }
+  #crumbs button:hover { background: rgba(255,255,255,.08); color: #fff; }
+  #crumbs .cur { color: var(--accent); }
+  #crumbs .off { opacity: .5; }
+  #pathErr { display: none; margin-top: 6px; padding: 5px 8px; border-radius: 8px; background: rgba(255,107,107,.12); color: #ffa8a8; font-size: 12px; }
+  #stats { margin-top: 6px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  #stats b { color: var(--text); font-weight: 600; }
+  #warn { display: none; margin-top: 8px; padding: 6px 8px; border-radius: 8px; background: rgba(255,169,77,.12); color: #ffc078; font-size: 12px; }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; user-select: none; }
+  .list { margin-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+  .row { display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 6px; }
+  button.row { all: unset; display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 6px; cursor: pointer; }
+  button.row:hover, button.row:focus-visible { background: rgba(255,255,255,.07); }
+  .row .sw { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .ct { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+
+  #tools { top: 14px; right: 14px; padding: 8px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100vw - 310px); }
+  #search {
+    width: 210px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--panel-border);
+    background: rgba(0,0,0,.35); color: var(--text); font: inherit; outline: none;
+  }
+  #search:focus { border-color: rgba(255,224,138,.5); }
+  .btn {
+    padding: 7px 10px; border-radius: 8px; border: 1px solid var(--panel-border); background: rgba(255,255,255,.05);
+    color: var(--text); font: inherit; cursor: pointer; white-space: nowrap;
+  }
+  .btn:hover { background: rgba(255,255,255,.1); }
+  .btn.on { border-color: rgba(255,224,138,.55); color: var(--accent); }
+
+  #info { right: 14px; bottom: 14px; width: 300px; padding: 12px 14px; display: none; }
+  #info .name { font-size: 15px; font-weight: 650; word-break: break-all; }
+  #info .path { font-family: var(--mono); font-size: 11px; color: var(--muted); word-break: break-all; margin-top: 2px; }
+  #info dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 10px 0; }
+  #info dt { color: var(--muted); }
+  #info dd { margin: 0; font-variant-numeric: tabular-nums; }
+  #info .actions { display: flex; gap: 6px; }
+  #info .close { position: absolute; top: 8px; right: 10px; background: none; border: 0; color: var(--muted); font-size: 18px; cursor: pointer; }
+
+  #feed { left: 14px; bottom: 14px; width: 330px; padding: 10px 12px; }
+  #feed h2 { margin: 0 0 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+  #feed .empty { color: var(--muted); font-size: 12px; }
+  .ev { all: unset; display: flex; gap: 8px; align-items: baseline; padding: 2px 4px; border-radius: 5px; cursor: pointer; width: 100%; box-sizing: border-box; }
+  .ev:hover { background: rgba(255,255,255,.07); }
+  .ev .k { width: 12px; font-weight: 700; font-family: var(--mono); flex: none; }
+  .ev .k.add { color: #63e6be; } .ev .k.del { color: #ff6b6b; } .ev .k.chg { color: #ffd43b; }
+  .ev .p { font-family: var(--mono); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left; flex: 1; }
+  .ev .t { color: var(--muted); font-size: 11px; flex: none; }
+
+  #hint {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); color: var(--muted); font-size: 12px;
+    background: var(--panel); border: 1px solid var(--panel-border); padding: 6px 12px; border-radius: 999px;
+    transition: opacity 1s; pointer-events: none; white-space: nowrap;
+  }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 14px; pointer-events: none; }
+
+  .scene-tooltip { font: 12px/1.4 var(--font) !important; }
+  .tip { background: rgba(10,12,22,.92); border: 1px solid var(--panel-border); padding: 7px 10px; border-radius: 8px; max-width: 360px; }
+  .tip b { font-size: 13px; }
+  .tip .tp { font-family: var(--mono); font-size: 11px; color: var(--muted); word-break: break-all; }
+
+  @media (max-width: 760px) {
+    #hud { width: calc(100vw - 28px); max-height: 46vh; top: max(14px, env(safe-area-inset-top)); }
+    #hudToggle { display: inline-block; }
+    #tools { top: auto; bottom: max(14px, env(safe-area-inset-bottom)); right: 14px; left: 14px; max-width: none; justify-content: center; }
+    .btn { padding: 8px 10px; }
+    #search { flex: 1; min-width: 140px; }
+    #feed, #hint { display: none; }
+    #info { bottom: 120px; left: 14px; right: 14px; width: auto; }
+  }
+</style>
+</head>
+<body>
+<div id="graph"></div>
+<div id="labels"></div>
+<div id="loading" data-i18n="loading">Reading folders…</div>
+
+<section id="hud" class="panel" aria-label="Folder Galaxy">
+  <h1><span class="dot-root"></span><span id="rootName">Folder Galaxy</span>
+    <span id="live" data-i18n-title="liveTitle"><i></i><span id="liveTxt" data-i18n="connecting">connecting…</span></span>
+    <button type="button" id="hudToggle" aria-label="Menu" aria-expanded="true">▾</button></h1>
+  <div id="hudBody">
+  <form id="pathForm" autocomplete="off">
+    <button type="button" class="btn" id="bUp" data-i18n-title="up">↑</button>
+    <input id="pathInput" list="dirList" spellcheck="false" autocapitalize="off" data-i18n-placeholder="pathPlaceholder" data-i18n-aria="pathLabel">
+    <button class="btn" type="submit" data-i18n="go">Go</button>
+  </form>
+  <datalist id="dirList"></datalist>
+  <div id="crumbs"></div>
+  <div id="pathErr"></div>
+  <div id="stats">—</div>
+  <div id="warn"></div>
+  <details open>
+    <summary data-i18n="topFolders">Top-level folders</summary>
+    <div class="list" id="projList"></div>
+  </details>
+  <details>
+    <summary data-i18n="fileTypes">File types</summary>
+    <div class="list" id="legend"></div>
+  </details>
+  </div>
+</section>
+
+<section id="tools" class="panel" aria-label="Tools">
+  <input id="search" type="search" data-i18n-placeholder="search" autocomplete="off" spellcheck="false">
+  <button class="btn" id="bExpand" data-i18n="expand" data-i18n-title="expandTitle">Expand all</button>
+  <button class="btn" id="bCollapse" data-i18n="collapse" data-i18n-title="collapseTitle">Collapse</button>
+  <button class="btn" id="bLabels" data-i18n="labels" data-i18n-title="labelsTitle">Labels</button>
+  <button class="btn" id="bRotate" data-i18n="rotate" data-i18n-title="rotateTitle">Rotate</button>
+  <button class="btn" id="bFit" data-i18n="fit" data-i18n-title="fitTitle">Fit</button>
+</section>
+
+<section id="info" class="panel" aria-live="polite">
+  <button class="close" id="infoClose" data-i18n-aria="close">×</button>
+  <div class="name" id="iName"></div>
+  <div class="path" id="iPath"></div>
+  <dl id="iDl"></dl>
+  <div class="actions">
+    <button class="btn" id="iFly" data-i18n="flyHere">Fly here</button>
+    <button class="btn" id="iToggle">Open</button>
+    <button class="btn" id="iEnter" data-i18n="enter" data-i18n-title="enterTitle">Enter ›</button>
+  </div>
+</section>
+
+<section id="feed" class="panel" aria-label="Activity">
+  <h2 data-i18n="activity">Live activity</h2>
+  <div id="feedList"><div class="empty" data-i18n="noActivity">No changes since you opened the page.</div></div>
+</section>
+
+<div id="hint"></div>
+
+<script src="3d-force-graph.min.js"></script>
+<script>
+(() => {
+  // ------------------------------------------------------------------ config
+  const COLLAPSE_AT = 120;     // folders with more direct children start collapsed
+  const INITIAL_LIMIT = 4000;  // above this, only 2 levels are shown at start
+  const RECENT_MIN = 20;       // minutes a modified file stays "lit"
+  const OLD_DAYS = 60;         // older files look dimmer
+  const FLASH_MS = 4000;
+  const DYING_MS = 1600;
+
+  // ------------------------------------------------------------------ i18n
+  const I18N = {
+    en: {
+      loading: 'Reading folders…', connecting: 'connecting…', live: 'live', reconnecting: 'reconnecting…',
+      liveTitle: 'Real-time connection', up: 'Parent folder', go: 'Go', pathLabel: 'Folder to show',
+      pathPlaceholder: '/path/to/folder', topFolders: 'Top-level folders', fileTypes: 'File types',
+      search: 'Search files or folders…  ( / )', expand: 'Expand all', expandTitle: 'Open every folder',
+      collapse: 'Collapse', collapseTitle: 'Close everything, show the first level only',
+      labels: 'Labels', labelsTitle: 'Show the name of every folder', rotate: 'Rotate', rotateTitle: 'Auto-rotate',
+      fit: 'Fit', fitTitle: 'Fit everything in view', close: 'Close', flyHere: 'Fly here', open: 'Open',
+      enter: 'Enter ›', enterTitle: 'Show only this folder', activity: 'Live activity',
+      noActivity: 'No changes since you opened the page.',
+      hint: 'Drag to rotate · scroll to zoom · click a folder to open it · pick the folder at the top left',
+      hintTouch: 'Drag to rotate · pinch to zoom · tap a folder to open it',
+      folder: 'folder', rootFolder: 'root folder', files: 'files', file: 'file',
+      collapsedTip: 'collapsed, click to open', modified: 'modified', unreadable: 'unreadable',
+      now: 'just now', minAgo: '{n} min ago', hourAgo: '1 hour ago', hoursAgo: '{n} hours ago',
+      yesterday: 'yesterday', daysAgo: '{n} days ago', agoNow: 'now', agoMin: '{n} min',
+      newItems: '{n} new items', removedItems: '{n} items removed', changedFiles: '{n} files modified',
+      stats: '<b>{f}</b> files · <b>{d}</b> folders · <b>{s}</b>', inView: '{n} items in view',
+      updated: 'updated {t}', truncated: 'More than {n} items: showing only part of them. Raise MAX_NODES or exclude some folders.',
+      noFolders: 'No sub-folders', flyTo: 'Fly to {n}', brighter: 'brighter = modified recently',
+      type: 'Type', size: 'Size', lastActivity: 'Last activity', directItems: 'Direct items', note: 'Note',
+      unreadableFolder: 'folder not readable', goTo: 'Go to {p}', noService: 'The server is not responding',
+      errOutside: 'Only folders inside {b} can be shown', errMissing: 'This folder does not exist',
+      errDenied: 'No permission to read this folder',
+      cat: { py: 'Python', js: 'JS / TS', web: 'Web', code: 'Other code', sh: 'Scripts', cfg: 'Config', doc: 'Docs', data: 'Data', log: 'Logs', media: 'Media', other: 'Other' },
+    },
+    it: {
+      loading: 'Sto leggendo le cartelle…', connecting: 'connessione…', live: 'live', reconnecting: 'riconnessione…',
+      liveTitle: 'Connessione in tempo reale', up: 'Cartella superiore', go: 'Vai', pathLabel: 'Cartella da mostrare',
+      pathPlaceholder: '/percorso/della/cartella', topFolders: 'Cartelle principali', fileTypes: 'Tipi di file',
+      search: 'Cerca file o cartella…  ( / )', expand: 'Espandi tutto', expandTitle: 'Apri tutte le cartelle',
+      collapse: 'Comprimi', collapseTitle: 'Chiudi tutto e mostra solo il primo livello',
+      labels: 'Etichette', labelsTitle: 'Mostra il nome di tutte le cartelle', rotate: 'Rotazione', rotateTitle: 'Rotazione automatica',
+      fit: 'Centra', fitTitle: 'Inquadra tutto', close: 'Chiudi', flyHere: 'Vola qui', open: 'Apri',
+      enter: 'Entra ›', enterTitle: 'Mostra solo questa cartella', activity: 'Attività in tempo reale',
+      noActivity: 'Nessuna modifica da quando hai aperto la pagina.',
+      hint: 'Trascina per ruotare · rotellina per lo zoom · clic su una cartella per aprirla · in alto a sinistra scegli la cartella',
+      hintTouch: 'Trascina per ruotare · pizzica per lo zoom · tocca una cartella per aprirla',
+      folder: 'cartella', rootFolder: 'cartella principale', files: 'file', file: 'file',
+      collapsedTip: 'chiusa, clic per aprire', modified: 'modificato', unreadable: 'non leggibile',
+      now: 'adesso', minAgo: '{n} min fa', hourAgo: '1 ora fa', hoursAgo: '{n} ore fa',
+      yesterday: 'ieri', daysAgo: '{n} giorni fa', agoNow: 'ora', agoMin: '{n} min',
+      newItems: '{n} elementi nuovi', removedItems: '{n} elementi rimossi', changedFiles: '{n} file modificati',
+      stats: '<b>{f}</b> file · <b>{d}</b> cartelle · <b>{s}</b>', inView: 'in vista {n} elementi',
+      updated: 'aggiornato alle {t}', truncated: 'Ci sono più di {n} elementi: ne mostro solo una parte. Aumenta MAX_NODES o escludi qualche cartella.',
+      noFolders: 'Nessuna sottocartella', flyTo: 'Vola su {n}', brighter: 'più luminoso = modificato da poco',
+      type: 'Tipo', size: 'Dimensione', lastActivity: 'Ultima attività', directItems: 'Elementi diretti', note: 'Nota',
+      unreadableFolder: 'cartella non leggibile', goTo: 'Vai a {p}', noService: 'Il servizio non risponde',
+      errOutside: 'Puoi scegliere solo cartelle dentro {b}', errMissing: 'Questa cartella non esiste',
+      errDenied: 'Non ho il permesso di leggere questa cartella',
+      cat: { py: 'Python', js: 'JS / TS', web: 'Web', code: 'Altro codice', sh: 'Script', cfg: 'Config', doc: 'Documenti', data: 'Dati', log: 'Log', media: 'Media', other: 'Altro' },
+    },
+  };
+  const urlLang = new URL(location.href).searchParams.get('lang');
+  const LANG = I18N[urlLang] ? urlLang : ((navigator.language || 'en').toLowerCase().startsWith('it') ? 'it' : 'en');
+  const L = I18N[LANG];
+  const t = (key, params = {}) => String(L[key] ?? I18N.en[key] ?? key).replace(/\{(\w+)\}/g, (_, k) => params[k] ?? '');
+  document.documentElement.lang = LANG;
+  const IS_TOUCH = matchMedia('(pointer: coarse)').matches;
+
+  const PROJECT_COLORS = ['#ff8787','#ffa94d','#ffd43b','#8ce99a','#38d9a9','#4dabf7',
+                          '#91a7ff','#da77f2','#f783ac','#c0eb75','#66d9e8','#e599f7','#ffc078','#74c0fc'];
+  const CATS = {
+    py:    { label: 'Python',     color: '#4dabf7', ext: ['py','pyw','pyi','ipynb'] },
+    js:    { label: 'JS / TS',    color: '#ffe066', ext: ['js','mjs','cjs','ts','tsx','jsx'] },
+    web:   { label: 'Web',        color: '#ff922b', ext: ['html','htm','css','scss','vue','svelte'] },
+    code:  { label: 'Code',       color: '#a9e34b', ext: ['go','rs','c','h','cpp','hpp','cc','java','kt','swift','rb','php','cs','lua','r','scala','dart','zig'] },
+    sh:    { label: 'Script',     color: '#69db7c', ext: ['sh','bash','zsh','ps1','bat','service','timer'] },
+    cfg:   { label: 'Config',     color: '#b197fc', ext: ['json','yaml','yml','toml','ini','cfg','conf','env','lock','xml','properties'],
+             names: ['dockerfile','makefile','requirements.txt','.gitignore','.dockerignore','.env','procfile'] },
+    doc:   { label: 'Documenti',  color: '#dee2e6', ext: ['md','txt','rst','pdf','docx','rtf'] },
+    data:  { label: 'Dati',       color: '#20c997', ext: ['csv','tsv','parquet','db','sqlite','sqlite3','pkl','pickle','feather','h5','hdf5','jsonl','ndjson','npy','npz','xlsx','xls','arrow','duckdb','rrd'] },
+    log:   { label: 'Log',        color: '#ff6b6b', ext: ['log','out','err'] },
+    media: { label: 'Media',      color: '#f783ac', ext: ['png','jpg','jpeg','gif','svg','webp','mp4','mov','mkv','mp3','wav','ogg','ttf','otf','woff','woff2','ico'] },
+    other: { label: 'Altro',      color: '#868e96', ext: [] },
+  };
+  for (const [k, c] of Object.entries(CATS)) c.label = L.cat[k];
+  const EXT2CAT = {}, NAME2CAT = {};
+  for (const [k, c] of Object.entries(CATS)) {
+    c.ext.forEach(e => EXT2CAT[e] = k);
+    (c.names || []).forEach(n => NAME2CAT[n] = k);
+  }
+  function catOf(name) {
+    const lower = name.toLowerCase();
+    if (NAME2CAT[lower]) return NAME2CAT[lower];
+    if (lower.startsWith('.env') || lower.startsWith('docker-compose') || lower.startsWith('dockerfile')) return 'cfg';
+    if (/\.log(\.\d+)?$/.test(lower)) return 'log';
+    const dot = lower.lastIndexOf('.');
+    return dot > 0 ? (EXT2CAT[lower.slice(dot + 1)] || 'other') : 'other';
+  }
+
+  // ------------------------------------------------------------------ helpers
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const LOCALE = LANG === 'it' ? 'it-IT' : undefined;
+  const nf = new Intl.NumberFormat(LOCALE);
+  function fmtBytes(b) {
+    if (!b) return '0 B';
+    const u = ['B','KB','MB','GB','TB']; let i = 0;
+    while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+    return nf.format(b >= 10 || i === 0 ? Math.round(b) : Math.round(b * 10) / 10) + ' ' + u[i];
+  }
+  function rel(ts) {
+    const s = Date.now() / 1000 - ts;
+    if (s < 45) return t('now');
+    if (s < 3600) return t('minAgo', { n: Math.round(s / 60) });
+    if (s < 86400) return Math.round(s / 3600) === 1 ? t('hourAgo') : t('hoursAgo', { n: Math.round(s / 3600) });
+    if (s < 172800) return t('yesterday');
+    if (s < 86400 * 45) return t('daysAgo', { n: Math.round(s / 86400) });
+    return new Date(ts * 1000).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  const absTime = ts => new Date(ts * 1000).toLocaleString(LOCALE, { dateStyle: 'medium', timeStyle: 'short' });
+  const mixCache = new Map();
+  function mix(a, b, k) {
+    k = Math.round(Math.max(0, Math.min(1, k)) * 12) / 12;
+    const key = a + b + k;
+    let r = mixCache.get(key);
+    if (r) return r;
+    const A = [1,3,5].map(i => parseInt(a.substr(i, 2), 16)), B = [1,3,5].map(i => parseInt(b.substr(i, 2), 16));
+    r = '#' + A.map((v, i) => Math.round(v + (B[i] - v) * k).toString(16).padStart(2, '0')).join('');
+    mixCache.set(key, r);
+    return r;
+  }
+
+  // ------------------------------------------------------------------ state
+  const all = new Map();        // id -> node
+  const kids = new Map();       // id -> Set(child ids)
+  const linkOf = new Map();     // child id -> link to its parent
+  const collapsed = new Set();
+  const userOpened = new Set();
+  const flashes = new Map();    // id -> {t0, kind}
+  const projIdx = new Map();
+  let visibleNodes = [], visibleSet = new Set();
+  let selectedId = null, hoverId = null;
+  let searchQ = '', searchHits = new Set();
+  let showAllLabels = false;
+  let rootName = '';
+  let currentPath = '', basePath = '/', defaultPath = '';
+  let es = null, gen = 0;
+  const joinPath = (base, rel) => base.endsWith('/') ? base + rel : base + '/' + rel;
+  const fullPath = n => n.id === '' ? currentPath : joinPath(currentPath, n.id);
+  // "/home/me/x" -> [["/","/"],["home","/home"],...]; "C:/Users/me" -> [["C:","C:/"],["Users","C:/Users"],...]
+  function splitPath(p) {
+    const out = []; let acc;
+    if (/^[A-Za-z]:/.test(p)) { acc = p.slice(0, 2) + '/'; out.push([acc, acc]); p = p.slice(2); }
+    else { acc = '/'; out.push(['/', '/']); }
+    for (const part of p.split('/').filter(Boolean)) { acc = joinPath(acc, part); out.push([part, acc]); }
+    return out;
+  }
+  let lastUpdate = null, truncated = false, maxNodes = 0;
+  let feed = [];
+  let unpinTimer = null, pinned = [];
+
+  function projColor(p) {
+    if (!projIdx.has(p)) projIdx.set(p, projIdx.size);
+    return PROJECT_COLORS[projIdx.get(p) % PROJECT_COLORS.length];
+  }
+
+  function upsert(d) {
+    let n = all.get(d.id);
+    if (n) {
+      Object.assign(n, d);
+      if (!('e' in d)) n.e = 0;
+      if (n.__dying) n.__dying = 0;
+      return n;
+    }
+    n = Object.assign({}, d);
+    n.depth = d.id === '' ? 0 : d.id.split('/').length;
+    n.proj = d.id === '' ? '' : d.id.split('/')[0];
+    if (n.t === 'f') n.cat = catOf(n.n);
+    all.set(n.id, n);
+    if (n.p !== null && n.p !== undefined) {
+      if (!kids.has(n.p)) kids.set(n.p, new Set());
+      kids.get(n.p).add(n.id);
+      linkOf.set(n.id, { source: n.p, target: n.id });
+    }
+    return n;
+  }
+  function removeNode(id) {
+    const n = all.get(id);
+    if (!n) return;
+    all.delete(id); linkOf.delete(id); kids.delete(id); collapsed.delete(id); flashes.delete(id);
+    const s = kids.get(n.p); if (s) s.delete(id);
+    if (selectedId === id) select(null);
+  }
+  function autoCollapse() {
+    for (const [id, set] of kids) {
+      if (id !== '' && set.size > COLLAPSE_AT && !userOpened.has(id)) collapsed.add(id);
+    }
+  }
+  function computeVisible() {
+    const nodes = [], links = [], stack = [''];
+    while (stack.length) {
+      const id = stack.pop(), n = all.get(id);
+      if (!n) continue;
+      nodes.push(n);
+      if (id !== '') { const l = linkOf.get(id); if (l) links.push(l); }
+      if (n.t === 'd' && !collapsed.has(id)) {
+        const k = kids.get(id);
+        if (k) for (const c of k) stack.push(c);
+      }
+    }
+    return { nodes, links };
+  }
+
+  // ------------------------------------------------------------------ graph
+  function nodeVal(n) {
+    if (n.id === '') return 70;
+    if (n.t === 'd') {
+      let v = 3 + Math.log2((n.f || 0) + 1) * 2.2;
+      if (n.depth === 1) v += 12;
+      if (collapsed.has(n.id)) v *= 1.5;
+      return v;
+    }
+    return 0.3 + Math.log10((n.s || 0) + 10) * 0.25;
+  }
+  function baseColor(n) {
+    if (n.id === '') return '#fff3bf';
+    if (n.t === 'd') return projColor(n.proj);
+    return CATS[n.cat].color;
+  }
+  function nodeColor(n) {
+    if (n.__dying) return '#ff3b3b';
+    if (n.id === selectedId) return '#ffffff';
+    const hit = searchHits.has(n.id);
+    if (searchQ && !hit) return 'rgba(110,120,145,0.16)';
+    if (hit) return '#fff3bf';
+    let c = baseColor(n);
+    const fl = flashes.get(n.id);
+    if (fl) {
+      const k = 1 - (performance.now() - fl.t0) / FLASH_MS;
+      if (k > 0) return mix(c, fl.kind === 'add' ? '#e6fcff' : '#ffffff', 0.15 + 0.85 * k);
+    }
+    if (n.t === 'f') {
+      const ageMin = (Date.now() / 1000 - n.m) / 60;
+      if (ageMin < RECENT_MIN) return mix(c, '#ffffff', 0.5 * (1 - ageMin / RECENT_MIN));
+      if (ageMin > OLD_DAYS * 1440) return mix(c, '#05060d', 0.38);
+    } else if (collapsed.has(n.id)) {
+      return mix(c, '#ffffff', 0.3);
+    }
+    return c;
+  }
+  function linkColor(l) {
+    const t = typeof l.target === 'object' ? l.target : all.get(l.target);
+    if (!t) return '#556';
+    if (t.depth === 1) return t.t === 'd' ? projColor(t.proj) : '#8892a6';
+    return projColor(t.proj);
+  }
+  function nodeTip(n) {
+    const path = fullPath(n);
+    const kind = n.t === 'd'
+      ? `${t('folder')} · ${nf.format(n.f || 0)} ${t('files')} · ${fmtBytes(n.s)}${collapsed.has(n.id) ? ` · <i>${t('collapsedTip')}</i>` : ''}`
+      : `${CATS[n.cat].label} · ${fmtBytes(n.s)}`;
+    return `<div class="tip"><b>${esc(n.n)}</b><div class="tp">${esc(path)}</div>${kind}<br>${t('modified')} ${rel(n.m)}${n.e ? `<br><i>${t('unreadable')}</i>` : ''}</div>`;
+  }
+
+  const el = $('graph');
+  const Graph = ForceGraph3D({ controlType: 'orbit' })(el)
+    .backgroundColor('rgba(0,0,0,0)')
+    .showNavInfo(false)
+    .nodeId('id')
+    .nodeRelSize(3)
+    .nodeResolution(IS_TOUCH ? 6 : 10)
+    .nodeOpacity(0.95)
+    .nodeVal(nodeVal)
+    .nodeColor(nodeColor)
+    .nodeLabel(nodeTip)
+    .linkColor(linkColor)
+    .linkOpacity(0.22)
+    .linkWidth(0)
+    .cooldownTime(20000)
+    .onNodeHover(n => { hoverId = n ? n.id : null; el.style.cursor = n ? 'pointer' : ''; })
+    .onNodeClick(n => {
+      select(n.id);
+      if (n.t === 'd' && n.id !== '') toggle(n.id);
+    })
+    .onBackgroundClick(() => select(null));
+
+  // ---------------------------------------------------------------- layout
+  // Every top-level folder is a galaxy: galaxies keep their distance ("galaxy"
+  // force) and inside each galaxy the tree grows outwards like a branch ("branch"
+  // force): the children of a folder sit together, on the side opposite to the
+  // folder's own parent.
+  const galaxyCount = new Map();   // top-level folder id -> visible items
+  function galaxyRadius(p) { return 40 + 9 * Math.sqrt(galaxyCount.get(p.id) || 1); }
+  function linkDist(n) {
+    if (n.depth === 1) return n.t === 'd' ? 140 + galaxyRadius(n) : 80;
+    if (n.t === 'd') return n.depth === 2 ? 46 : 30;
+    return 13;
+  }
+  function hashRand(id, k) {   // "random" but always the same for the same file
+    let h = 2166136261 ^ k;
+    for (let i = 0; i < id.length; i++) { h ^= id.charCodeAt(i); h = Math.imul(h, 16777619); }
+    h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995); h ^= h >>> 15;
+    return (h >>> 0) / 4294967296;
+  }
+  function placeNode(n) {
+    if (n.id === '') { n.x = n.y = n.z = 0; n.fx = n.fy = n.fz = 0; n.vx = n.vy = n.vz = 0; return true; }
+    const P = all.get(n.p);
+    if (!P || P.x === undefined) return false;
+    let dx, dy, dz;
+    if (n.depth === 1) {
+      // top-level folders spread evenly on a sphere (alphabetical order)
+      const sibs = [...(kids.get('') || [])].sort();
+      const i = Math.max(0, sibs.indexOf(n.id)), N = Math.max(1, sibs.length);
+      const y = 1 - 2 * (i + 0.5) / N, r = Math.sqrt(1 - y * y), th = i * 2.399963;
+      dx = Math.cos(th) * r; dy = y; dz = Math.sin(th) * r;
+    } else {
+      const G = all.get(P.p);
+      dx = P.x - G.x; dy = P.y - G.y; dz = P.z - G.z;
+      const d = Math.hypot(dx, dy, dz) || 1;
+      dx = dx / d + (hashRand(n.id, 1) - 0.5) * 1.1;
+      dy = dy / d + (hashRand(n.id, 2) - 0.5) * 1.1;
+      dz = dz / d + (hashRand(n.id, 3) - 0.5) * 1.1;
+    }
+    const d = Math.hypot(dx, dy, dz) || 1, L = linkDist(n);
+    n.x = P.x + dx / d * L; n.y = P.y + dy / d * L; n.z = P.z + dz / d * L;
+    n.vx = n.vy = n.vz = 0;
+    return true;
+  }
+  function branchForce() {
+    let nodes = [];
+    function force(alpha) {
+      for (const n of nodes) {
+        if (n.depth < 2) continue;
+        const P = all.get(n.p); if (!P || P.x === undefined) continue;
+        const G = all.get(P.p); if (!G || G.x === undefined) continue;
+        let dx = P.x - G.x, dy = P.y - G.y, dz = P.z - G.z;
+        const d = Math.hypot(dx, dy, dz) || 1, L = linkDist(n);
+        const k = (n.t === 'f' ? 0.16 : 0.1) * alpha;
+        n.vx += (P.x + dx / d * L - n.x) * k;
+        n.vy += (P.y + dy / d * L - n.y) * k;
+        n.vz += (P.z + dz / d * L - n.z) * k;
+      }
+    }
+    force.initialize = ns => { nodes = ns; };
+    return force;
+  }
+  function galaxyForce() {
+    // Measures the real cloud of every galaxy (centre and spread) and, when two
+    // clouds overlap, pushes each whole cloud away.
+    let nodes = [];
+    function force(alpha) {
+      const g = new Map();
+      for (const n of nodes) {
+        if (n.depth < 1 || n.x === undefined) continue;
+        let s = g.get(n.proj);
+        if (!s) g.set(n.proj, s = { x: 0, y: 0, z: 0, c: 0, r2: 0, members: [] });
+        s.x += n.x; s.y += n.y; s.z += n.z; s.c++; s.members.push(n);
+      }
+      const gs = [...g.values()].filter(s => s.c > 0);
+      for (const s of gs) {
+        s.x /= s.c; s.y /= s.c; s.z /= s.c;
+        for (const n of s.members) s.r2 += (n.x - s.x) ** 2 + (n.y - s.y) ** 2 + (n.z - s.z) ** 2;
+        s.r = Math.max(30, 1.35 * Math.sqrt(s.r2 / s.c));
+        s.dx = s.dy = s.dz = 0;
+      }
+      for (let i = 0; i < gs.length; i++) for (let j = i + 1; j < gs.length; j++) {
+        const a = gs[i], b = gs[j];
+        const dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
+        const d = Math.hypot(dx, dy, dz) || 1, min = a.r + b.r + 40;
+        if (d < min) {
+          const s = (min - d) / d * 0.12 * alpha;
+          a.dx -= dx * s; a.dy -= dy * s; a.dz -= dz * s;
+          b.dx += dx * s; b.dy += dy * s; b.dz += dz * s;
+        }
+      }
+      for (const s of gs) {
+        if (!s.dx && !s.dy && !s.dz) continue;
+        for (const n of s.members) { n.vx += s.dx; n.vy += s.dy; n.vz += s.dz; }
+      }
+    }
+    force.initialize = ns => { nodes = ns; };
+    return force;
+  }
+  Graph.d3Force('link')
+    .distance(l => {
+      const t = typeof l.target === 'object' ? l.target : all.get(l.target);
+      return t ? linkDist(t) : 20;
+    });
+  Graph.d3Force('charge')
+    .strength(n => n.id === '' ? -60 : n.t === 'd' ? (n.depth === 1 ? -150 : -30) : -5)
+    .distanceMax(260);
+  Graph.d3Force('center', null);   // the root folder is pinned at the origin
+  Graph.d3Force('branch', branchForce());
+  Graph.d3Force('galaxy', galaxyForce());
+
+  function recolor() { Graph.nodeColor(n => nodeColor(n)); }
+
+  function refresh(opts = {}) {
+    const { nodes, links } = computeVisible();
+    galaxyCount.clear();
+    for (const n of nodes) if (n.depth >= 1) galaxyCount.set(n.proj, (galaxyCount.get(n.proj) || 0) + 1);
+    // New nodes, or nodes shown again after a folder was collapsed, are born in
+    // the right place (beyond their folder) instead of where they used to be.
+    // The list is ordered parent -> children, so the parent is already placed.
+    const prev = visibleSet, placed = new Set();
+    for (const n of nodes) {
+      if (n.x === undefined || (prev.size && !prev.has(n.id))) {
+        if (placeNode(n)) placed.add(n.id);
+      }
+    }
+    // during small updates everything else is held still so the view doesn't jump
+    // (big changes let the whole layout settle freely)
+    for (const p of pinned) { p.fx = p.fy = p.fz = undefined; }
+    pinned = [];
+    if (opts.pin && placed.size <= Math.max(40, nodes.length * 0.08)) {
+      for (const n of nodes) {
+        if (n.x !== undefined && !placed.has(n.id) && n.fx === undefined) {
+          n.fx = n.x; n.fy = n.y; n.fz = n.z; pinned.push(n);
+        }
+      }
+      clearTimeout(unpinTimer);
+      unpinTimer = setTimeout(() => {
+        for (const p of pinned) { p.fx = p.fy = p.fz = undefined; }
+        pinned = [];
+      }, 1400);
+    }
+    visibleNodes = nodes;
+    visibleSet = new Set(nodes.map(n => n.id));
+    Graph.graphData({ nodes, links });
+    renderStats(); renderProjects();
+  }
+
+  function toggle(id) {
+    if (collapsed.has(id)) { collapsed.delete(id); userOpened.add(id); }
+    else { collapsed.add(id); userOpened.delete(id); }
+    refresh({ pin: true });
+    renderInfo();
+  }
+  function revealAncestors(id) {
+    let n = all.get(id);
+    while (n && n.p !== null && n.p !== undefined) {
+      if (collapsed.has(n.p)) { collapsed.delete(n.p); userOpened.add(n.p); }
+      n = all.get(n.p);
+    }
+  }
+  function flyTo(n) {
+    if (!n || n.x === undefined) return;
+    if (n.id === '') { Graph.zoomToFit(1000, 60); return; }
+    let cx = n.x, cy = n.y, cz = n.z, dist = 70;
+    if (n.t === 'd') {
+      // frame the folder together with everything visible inside it
+      const pre = n.id + '/', members = visibleNodes.filter(m => (m.id === n.id || m.id.startsWith(pre)) && m.x !== undefined);
+      cx = cy = cz = 0;
+      for (const m of members) { cx += m.x; cy += m.y; cz += m.z; }
+      cx /= members.length; cy /= members.length; cz /= members.length;
+      const ds = members.map(m => Math.hypot(m.x - cx, m.y - cy, m.z - cz)).sort((a, b) => a - b);
+      dist = Math.max(70, ds[Math.floor(ds.length * 0.9)] * 2.6);
+    }
+    // look from outside the constellation towards the target
+    const len = Math.hypot(cx, cy, cz) || 1;
+    Graph.cameraPosition({ x: cx + cx / len * dist, y: cy + cy / len * dist, z: cz + cz / len * dist }, { x: cx, y: cy, z: cz }, 1200);
+  }
+  function reveal(id) {
+    const n = all.get(id);
+    if (!n) return;
+    const needs = !visibleSet.has(id);
+    revealAncestors(id);
+    if (needs) refresh({ pin: true });
+    select(id);
+    setTimeout(() => flyTo(all.get(id)), needs ? 700 : 0);
+  }
+
+  // ------------------------------------------------------------------ data in
+  function applySnapshot(s) {
+    const first = all.size === 0;
+    rootName = s.root || rootName; truncated = s.truncated; maxNodes = s.maxNodes;
+    if (s.path && s.path !== currentPath) { currentPath = s.path; renderPath(); }
+    $('rootName').textContent = rootName;
+    const ids = new Set(s.nodes.map(n => n.id));
+    for (const id of [...all.keys()]) if (!ids.has(id)) removeNode(id);
+    s.nodes.filter(n => n.p === '' && n.t === 'd').map(n => n.n).sort((a, b) => a.localeCompare(b)).forEach(projColor);
+    s.nodes.sort((a, b) => a.id.split('/').length - b.id.split('/').length).forEach(upsert);
+    if (first && all.size > INITIAL_LIMIT) {
+      for (const n of all.values()) if (n.t === 'd' && n.depth >= 2) collapsed.add(n.id);
+    }
+    autoCollapse();
+    lastUpdate = new Date();
+    refresh({ pin: !first });
+    $('loading').style.display = 'none';
+    if (first) { const g = gen; setTimeout(() => { if (g === gen) Graph.zoomToFit(1200, 60); }, 3500); }
+  }
+
+  function applyDiff(d) {
+    truncated = d.truncated;
+    const now = performance.now();
+    let structural = false;
+    // removed: flash red, then disappear
+    const dying = [];
+    for (const id of d.removed) {
+      const n = all.get(id);
+      if (!n) continue;
+      structural = true;
+      if (visibleSet.has(id)) { n.__dying = now; dying.push(id); } else removeNode(id);
+    }
+    const g = gen;
+    if (dying.length) setTimeout(() => {
+      if (g !== gen) return;
+      let any = false;
+      for (const id of dying) { const n = all.get(id); if (n && n.__dying) { removeNode(id); any = true; } }
+      if (any) refresh({ pin: true });
+    }, DYING_MS);
+    for (const a of d.added) {
+      if (a.p === '' && a.t === 'd') projColor(a.n);
+      upsert(a); flashes.set(a.id, { t0: now, kind: 'add' }); structural = true;
+    }
+    for (const c of d.changed) {
+      upsert(c);
+      if (c.t === 'f') flashes.set(c.id, { t0: now, kind: 'chg' });
+    }
+    // activity feed
+    const evs = [];
+    const addedTop = d.added.filter(a => !d.added.some(b => b.t === 'd' && a.p === b.id));
+    if (addedTop.length > 25) evs.push({ k: 'add', id: null, txt: t('newItems', { n: nf.format(d.added.length) }) });
+    else addedTop.forEach(a => evs.push({ k: 'add', id: a.id }));
+    const removedSet = new Set(d.removed);
+    const removedTop = d.removed.filter(id => { const i = id.lastIndexOf('/'); return i < 0 || !removedSet.has(id.slice(0, i)); });
+    if (removedTop.length > 25) evs.push({ k: 'del', id: null, txt: t('removedItems', { n: nf.format(d.removed.length) }) });
+    else removedTop.forEach(id => evs.push({ k: 'del', id }));
+    const chg = d.changed.filter(c => c.t === 'f');
+    if (chg.length > 25) evs.push({ k: 'chg', id: null, txt: t('changedFiles', { n: nf.format(chg.length) }) });
+    else chg.forEach(c => evs.push({ k: 'chg', id: c.id }));
+    const t = Date.now();
+    feed = evs.map(e => Object.assign(e, { t })).concat(feed).slice(0, 14);
+    renderFeed();
+
+    autoCollapse();
+    lastUpdate = new Date();
+    if (structural) refresh({ pin: true }); else { recolor(); renderStats(); renderProjects(); }
+    renderInfo();
+  }
+
+  // ------------------------------------------------------------------ folder picker
+  function resetState() {
+    gen++;
+    all.clear(); kids.clear(); linkOf.clear(); collapsed.clear(); userOpened.clear();
+    flashes.clear(); projIdx.clear(); mixCache.clear();
+    for (const p of pinned) { p.fx = p.fy = p.fz = undefined; }
+    pinned = []; clearTimeout(unpinTimer);
+    visibleNodes = []; visibleSet = new Set();
+    selectedId = null; hoverId = null; projSig = ''; feed = [];
+    searchHits = new Set();
+    if (searchQ) { searchQ = ''; $('search').value = ''; }
+    Graph.graphData({ nodes: [], links: [] });
+    $('feedList').innerHTML = `<div class="empty">${esc(t('noActivity'))}</div>`;
+    $('info').style.display = 'none';
+    $('projList').textContent = '';
+    $('stats').textContent = '—';
+    $('loading').style.display = '';
+  }
+  function showPathError(msg) {
+    const e = $('pathErr');
+    e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none';
+  }
+  async function openRoot(path, push = true) {
+    let info;
+    try {
+      info = await (await fetch('api/check?root=' + encodeURIComponent(path || ''))).json();
+    } catch (err) { showPathError(t('noService')); return; }
+    basePath = info.base || basePath; defaultPath = info.default || defaultPath;
+    if (!info.ok) {
+      showPathError(info.error === 'outside' ? t('errOutside', { b: basePath }) : info.error === 'denied' ? t('errDenied') : t('errMissing'));
+      return;
+    }
+    showPathError('');
+    if (es) { es.close(); es = null; }
+    resetState();
+    currentPath = info.path;
+    renderPath();
+    const url = new URL(location.href);
+    if (currentPath === defaultPath) url.searchParams.delete('root'); else url.searchParams.set('root', currentPath);
+    if (push) history.pushState({ root: currentPath }, '', url); else history.replaceState({ root: currentPath }, '', url);
+    document.title = (splitPath(currentPath).pop()[0]) + ' · Folder Galaxy';
+    const myGen = gen;
+    es = new EventSource('api/events?root=' + encodeURIComponent(currentPath));
+    es.addEventListener('snapshot', e => { if (myGen === gen) applySnapshot(JSON.parse(e.data)); });
+    es.addEventListener('diff', e => { if (myGen === gen) applyDiff(JSON.parse(e.data)); });
+    es.onopen = () => setLive(true);
+    es.onerror = () => setLive(false);
+  }
+  function parentOf(p) {
+    const parts = splitPath(p);
+    return parts.length > 1 ? parts[parts.length - 2][1] : parts[0][1];
+  }
+  const insideBase = p => p === basePath || p.startsWith(basePath.endsWith('/') ? basePath : basePath + '/');
+  function renderPath() {
+    $('pathInput').value = currentPath;
+    requestAnimationFrame(() => { $('pathInput').scrollLeft = $('pathInput').scrollWidth; });
+    $('bUp').disabled = !insideBase(parentOf(currentPath)) || currentPath === basePath;
+    $('bUp').style.opacity = $('bUp').disabled ? .4 : 1;
+    const box = $('crumbs');
+    box.textContent = '';
+    const parts = splitPath(currentPath);
+    parts.forEach(([label, target], i) => {
+      let elx;
+      if (i === parts.length - 1) { elx = document.createElement('span'); elx.className = 'cur'; }
+      else if (insideBase(target)) { elx = document.createElement('button'); elx.onclick = () => openRoot(target); elx.title = t('goTo', { p: target }); }
+      else { elx = document.createElement('span'); elx.className = 'off'; }
+      elx.textContent = label;
+      box.appendChild(elx);
+      if (i > 0 && i < parts.length - 1) { const sep = document.createElement('span'); sep.textContent = '/'; sep.className = 'off'; box.appendChild(sep); }
+    });
+  }
+  $('pathForm').addEventListener('submit', e => { e.preventDefault(); $('pathInput').blur(); openRoot($('pathInput').value.trim()); });
+  $('bUp').onclick = () => openRoot(parentOf(currentPath));
+  window.addEventListener('popstate', () => {
+    const r = new URL(location.href).searchParams.get('root');
+    openRoot(r || defaultPath || '', false);
+  });
+  // sub-folder suggestions while typing a path
+  let dirTimer = null, dirFor = null;
+  $('pathInput').addEventListener('input', () => {
+    clearTimeout(dirTimer);
+    dirTimer = setTimeout(async () => {
+      const v = $('pathInput').value;
+      const parent = v.endsWith('/') ? (v.replace(/\/+$/, '') || '/') : parentOf(v);
+      if (parent === dirFor) return;
+      dirFor = parent;
+      try {
+        const r = await (await fetch('api/dirs?path=' + encodeURIComponent(parent))).json();
+        const dl = $('dirList'); dl.textContent = '';
+        if (!r.ok) return;
+        for (const d of r.dirs) { const o = document.createElement('option'); o.value = joinPath(r.path, d); dl.appendChild(o); }
+      } catch (err) { /* nessun suggerimento */ }
+    }, 180);
+  });
+  function setLive(on) {
+    $('live').classList.toggle('on', on);
+    $('liveTxt').textContent = on ? t('live') : t('reconnecting');
+  }
+
+  // ------------------------------------------------------------------ animation loops
+  setInterval(() => {
+    if (!flashes.size && !visibleNodes.some(n => n.__dying)) return;
+    const now = performance.now();
+    for (const [id, f] of flashes) if (now - f.t0 > FLASH_MS) flashes.delete(id);
+    recolor();
+  }, 140);
+  setInterval(() => { recolor(); renderStats(); renderFeed(); renderInfo(); }, 30000);
+
+  // HTML labels that follow the nodes
+  const labelsEl = $('labels');
+  const pool = new Map();
+  function labelTargets() {
+    const out = new Map();
+    const add = (n, cls) => { if (n && visibleSet.has(n.id) && !out.has(n.id)) out.set(n.id, cls); };
+    add(all.get(selectedId), 'sel');
+    add(all.get(hoverId), 'sel');
+    let c = 0;
+    for (const id of searchHits) { if (c++ > 40) break; add(all.get(id), 'hit'); }
+    add(all.get(''), 'root');
+    for (const id of (kids.get('') || [])) { const n = all.get(id); if (n && n.t === 'd') add(n, 'proj'); }
+    if (showAllLabels) {
+      let k = 0;
+      for (const n of visibleNodes) { if (n.t === 'd' && k < 400) { add(n, 'dir'); k++; } }
+    }
+    return out;
+  }
+  function labelHtml(n, cls) {
+    if (cls === 'root') return esc(rootName);
+    if (cls === 'proj') return `${esc(n.n)}<small>${nf.format(n.f || 0)} ${t('files')}</small>`;
+    if (n.t === 'd' && collapsed.has(n.id)) return `▸ ${esc(n.n)} <small>(${nf.format(n.f || 0)})</small>`;
+    return esc(n.n);
+  }
+  function drawLabels() {
+    const cam = Graph.camera();
+    const V = cam.position.constructor;
+    const v = new V();
+    const w = el.clientWidth, h = el.clientHeight;
+    const want = labelTargets();
+    for (const [id, div] of pool) if (!want.has(id)) { div.remove(); pool.delete(id); }
+    for (const [id, cls] of want) {
+      const n = all.get(id);
+      let div = pool.get(id);
+      if (!div) { div = document.createElement('div'); labelsEl.appendChild(div); pool.set(id, div); }
+      const html = labelHtml(n, cls);
+      if (div.__html !== html) { div.innerHTML = html; div.__html = html; }
+      if (div.className !== 'lbl ' + cls) div.className = 'lbl ' + cls;
+      if (n.x === undefined) { div.style.display = 'none'; continue; }
+      v.set(n.x, n.y, n.z);
+      const dist = cam.position.distanceTo(v);
+      v.project(cam);
+      if (v.z > 1 || v.z < -1) { div.style.display = 'none'; continue; }
+      const x = (v.x + 1) / 2 * w, y = (1 - v.y) / 2 * h;
+      const r = Math.cbrt(nodeVal(n)) * 3;
+      const off = Math.min(40, r * 600 / Math.max(dist, 1)) + 6;
+      div.style.display = '';
+      div.style.transform = `translate(${x}px, ${y - off}px) translate(-50%, -100%)`;
+      div.style.opacity = cls === 'dir' ? Math.max(0, Math.min(1, 1.4 - dist / 900)) : 1;
+    }
+    requestAnimationFrame(drawLabels);
+  }
+  requestAnimationFrame(drawLabels);
+
+  // ------------------------------------------------------------------ UI
+  function renderStats() {
+    const root = all.get('');
+    if (!root) return;
+    let dirs = 0; for (const n of all.values()) if (n.t === 'd') dirs++;
+    $('stats').innerHTML =
+      t('stats', { f: nf.format(root.f || 0), d: nf.format(Math.max(0, dirs - 1)), s: fmtBytes(root.s) }) + '<br>' +
+      t('inView', { n: nf.format(visibleNodes.length) }) +
+      (lastUpdate ? ' · ' + t('updated', { t: lastUpdate.toLocaleTimeString(LOCALE) }) : '');
+    const w = $('warn');
+    if (truncated) { w.style.display = 'block'; w.textContent = t('truncated', { n: nf.format(maxNodes) }); }
+    else w.style.display = 'none';
+  }
+  let projSig = '';
+  function renderProjects() {
+    const list = [...(kids.get('') || [])].map(id => all.get(id)).filter(n => n && n.t === 'd')
+      .sort((a, b) => a.n.localeCompare(b.n));
+    const sig = list.map(n => n.id + ':' + n.f).join('|');
+    if (sig === projSig) return;
+    projSig = sig;
+    const box = $('projList');
+    box.textContent = '';
+    if (!list.length) { box.innerHTML = `<div class="row" style="color:var(--muted)">${esc(t('noFolders'))}</div>`; return; }
+    for (const n of list) {
+      const b = document.createElement('button');
+      b.className = 'row';
+      b.innerHTML = `<span class="sw" style="background:${projColor(n.proj)}"></span><span class="nm"></span><span class="ct">${nf.format(n.f || 0)}</span>`;
+      b.querySelector('.nm').textContent = n.n;
+      b.title = t('flyTo', { n: n.n });
+      b.onclick = () => { select(n.id); flyTo(n); };
+      box.appendChild(b);
+    }
+  }
+  function renderLegend() {
+    const box = $('legend');
+    for (const c of Object.values(CATS)) {
+      const r = document.createElement('div');
+      r.className = 'row';
+      r.innerHTML = `<span class="sw" style="background:${c.color}"></span><span class="nm">${c.label}</span>`;
+      box.appendChild(r);
+    }
+    const r = document.createElement('div');
+    r.className = 'row';
+    r.innerHTML = `<span class="sw" style="background:#fff;box-shadow:0 0 6px #fff"></span><span class="nm">${esc(t('brighter'))}</span>`;
+    box.appendChild(r);
+  }
+  function renderFeed() {
+    const box = $('feedList');
+    if (!feed.length) return;
+    box.textContent = '';
+    for (const e of feed) {
+      const b = document.createElement('button');
+      b.className = 'ev';
+      const sym = e.k === 'add' ? '+' : e.k === 'del' ? '−' : '~';
+      const ago = Math.round((Date.now() - e.t) / 1000);
+      const when = ago < 60 ? t('agoNow') : t('agoMin', { n: Math.round(ago / 60) });
+      b.innerHTML = `<span class="k ${e.k}">${sym}</span><span class="p"></span><span class="t">${when}</span>`;
+      b.querySelector('.p').textContent = e.txt || ('‎' + e.id);
+      if (e.id && e.k !== 'del') b.onclick = () => reveal(e.id);
+      else b.style.cursor = 'default';
+      box.appendChild(b);
+    }
+  }
+  function select(id) {
+    selectedId = id;
+    recolor();
+    renderInfo();
+  }
+  function renderInfo() {
+    const n = selectedId !== null ? all.get(selectedId) : null;
+    const box = $('info');
+    if (!n) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    $('iName').textContent = n.n;
+    $('iPath').textContent = fullPath(n);
+    const rows = n.t === 'd'
+      ? [[t('type'), n.id === '' ? t('rootFolder') : t('folder')], [t('files').replace(/^./, c => c.toUpperCase()), nf.format(n.f || 0)],
+         [t('directItems'), nf.format((kids.get(n.id) || new Set()).size)], [t('size'), fmtBytes(n.s)],
+         [t('lastActivity'), rel(n.m)], ['', absTime(n.m)]]
+      : [[t('type'), CATS[n.cat].label], [t('size'), fmtBytes(n.s)], [t('modified').replace(/^./, c => c.toUpperCase()), rel(n.m)], ['', absTime(n.m)]];
+    if (n.e) rows.push([t('note'), t('unreadableFolder')]);
+    $('iDl').innerHTML = rows.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join('');
+    const tg = $('iToggle');
+    if (n.t === 'd' && n.id !== '') { tg.style.display = ''; tg.textContent = collapsed.has(n.id) ? t('open') : t('close'); }
+    else tg.style.display = 'none';
+    $('iEnter').style.display = n.t === 'd' && n.id !== '' ? '' : 'none';
+  }
+  $('infoClose').onclick = () => select(null);
+  $('iFly').onclick = () => flyTo(all.get(selectedId));
+  $('iToggle').onclick = () => { if (selectedId) toggle(selectedId); };
+  $('iEnter').onclick = () => { const n = all.get(selectedId); if (n) openRoot(fullPath(n)); };
+
+  $('bExpand').onclick = () => {
+    for (const id of collapsed) userOpened.add(id);
+    for (const [id] of kids) userOpened.add(id);
+    collapsed.clear();
+    refresh({ pin: true });
+    renderInfo();
+  };
+  $('bCollapse').onclick = () => {
+    userOpened.clear();
+    for (const n of all.values()) if (n.t === 'd' && n.depth >= 1) collapsed.add(n.id);
+    refresh({ pin: true });
+    renderInfo();
+    setTimeout(() => Graph.zoomToFit(1000, 60), 600);
+  };
+  $('bLabels').onclick = e => { showAllLabels = !showAllLabels; e.currentTarget.classList.toggle('on', showAllLabels); };
+  $('bRotate').onclick = e => {
+    const c = Graph.controls();
+    c.autoRotate = !c.autoRotate; c.autoRotateSpeed = 0.6;
+    e.currentTarget.classList.toggle('on', c.autoRotate);
+  };
+  $('bFit').onclick = () => Graph.zoomToFit(1000, 60);
+
+  const search = $('search');
+  search.addEventListener('input', () => {
+    searchQ = search.value.trim().toLowerCase();
+    searchHits = new Set();
+    if (searchQ) for (const n of all.values()) if (n.n.toLowerCase().includes(searchQ)) searchHits.add(n.id);
+    recolor();
+  });
+  search.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const first = [...searchHits].map(id => all.get(id)).sort((a, b) => a.depth - b.depth)[0];
+      if (first) reveal(first.id);
+    } else if (e.key === 'Escape') { search.value = ''; search.dispatchEvent(new Event('input')); search.blur(); }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement !== search) { e.preventDefault(); search.focus(); }
+    else if (e.key === 'Escape' && document.activeElement !== search) select(null);
+  });
+  window.addEventListener('resize', () => Graph.width(window.innerWidth).height(window.innerHeight));
+  setTimeout(() => { $('hint').style.opacity = 0; }, 12000);
+
+  // static texts
+  document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(e => { e.placeholder = t(e.dataset.i18nPlaceholder); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(e => { e.setAttribute('aria-label', t(e.dataset.i18nAria)); });
+  $('hint').textContent = IS_TOUCH ? t('hintTouch') : t('hint');
+  // on small screens the summary panel starts folded and can be toggled
+  function setHud(open) {
+    $('hudBody').style.display = open ? '' : 'none';
+    $('hudToggle').textContent = open ? '▾' : '▸';
+    $('hudToggle').setAttribute('aria-expanded', open);
+  }
+  $('hudToggle').onclick = () => setHud($('hudBody').style.display === 'none');
+  if (window.innerWidth < 760) { setHud(false); document.querySelectorAll('#hud details').forEach(d => d.open = false); }
+  window.__fg = { Graph, all, visible: () => visibleSet };  // handy for debugging from the console
+  renderLegend();
+  openRoot(new URL(location.href).searchParams.get('root') || '', false);
+})();
+</script>
+</body>
+</html>
